@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sublimia — Start Menu</title>
+
+  <!-- Fonts (calligraphic / decorative) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Uncial+Antiqua&display=swap"
+    rel="stylesheet">
+
+  <!-- Stylesheet (no inline styles) -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main id="root" class="root" role="main" aria-label="Sublimia start menu">
+    <!-- Background image (Start_menu.webp must exist in same folder) -->
+    <div class="bg">
+      <img src="Start_menu.webp" alt="" aria-hidden="true" class="bg-image" />
+      <canvas id="particles" class="particles" aria-hidden="true"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+    </div>
+
+    <!-- Center UI -->
+    <section class="menu" aria-hidden="false">
+      <!-- Title block -->
+      <div class="title-wrap" role="img" aria-label="Sublimia title">
+        <!-- SVG lightning centerpiece (decorative) -->
+        <svg class="lightning" viewBox="0 0 200 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- animated bolt path; JS will trigger flicker -->
+          <path id="bolt" d="M100 20 L80 160 L120 180 L60 340 L140 360 L100 580" stroke="rgba(255,240,200,0.95)"
+            stroke-width="10" stroke-linecap="round" fill="none" filter="url(#glow)" />
+        </svg>
+
+        <!-- Sublimia title: each letter animated in -->
+        <h1 id="sublimia" class="title" aria-hidden="false" aria-label="Sublimia">
+          <!-- JS will split text into spans if needed, but we create spans here for full control -->
+          <span style="--i:0">S</span><span style="--i:1">u</span><span style="--i:2">b</span><span
+            style="--i:3">l</span><span style="--i:4">i</span><span style="--i:5">m</span><span
+            style="--i:6">i</span><span style="--i:7">a</span>
+        </h1>
+
+        <!-- Subtitle with shimmer -->
+        <div class="subtitle-wrap" aria-hidden="false">
+          <div class="subtitle">Tower Defense</div>
+        </div>
+      </div>
+
+      <!-- Start line -->
+      <button id="startBtn" class="start-btn" aria-label="Click to start">
+        <span class="start-dot" aria-hidden="true"></span>
+        <span class="start-text">Click to start...</span>
+      </button>
+
+      <!-- Small controls for testing (keyboard accessible) -->
+      <div class="mini-cta" aria-hidden="true">
+        <button id="toggleAccount" class="mini-btn">Toggle Account (dev)</button>
+      </div>
+    </section>
+
+    <!-- Placeholders for pages we don't have yet -->
+    <div id="overlay" class="overlay" aria-hidden="true">
+      <div id="screen" class="screen" role="dialog" aria-live="polite">
+        <h2 id="screenTitle"></h2>
+        <p id="screenBody"></p>
+        <div class="screen-actions">
+          <button id="backBtn" class="ghost">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js" defer></script>
+  </main>
+</body>
+
+</html>

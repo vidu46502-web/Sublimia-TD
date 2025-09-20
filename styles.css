@@ -1,0 +1,359 @@
+:root {
+    --bg-dark: #071427;
+    --gold: #ffcf6b;
+    --accent: #a0dbff;
+    --glass: rgba(255, 255, 255, 0.06);
+    --white: #fff;
+    --ease-1: cubic-bezier(.2, .9, .27, 1);
+}
+
+/* Reset and base layout */
+* {
+    box-sizing: border-box
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Cinzel", "Uncial Antiqua", serif;
+    color: var(--white)
+}
+
+body {
+    background: linear-gradient(180deg, #0a1220 0%, #04101a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden
+}
+
+/* Background layer */
+.bg {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0
+}
+
+.bg-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: contrast(1.04) saturate(1.05) brightness(.95)
+}
+
+.particles {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none
+}
+
+.vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.55) 80%);
+    mix-blend-mode: multiply
+}
+
+/* Menu container */
+.menu {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6vmin;
+    gap: 2.2rem;
+    min-height: 60vh;
+    text-align: center;
+    backdrop-filter: blur(0.6px);
+}
+
+/* Title area */
+.title-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6rem;
+    transform: translateY(-2vh)
+}
+
+.title {
+    font-size: clamp(48px, 9.9vw, 140px);
+    letter-spacing: -0.02em;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    text-transform: none;
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
+    position: relative;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.6));
+}
+
+/* Each letter: initial offset then animate in via JS/CSS */
+.title span {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+    transform-origin: center bottom;
+    opacity: 0;
+    transform: translateY(40px) rotate(-6deg) scale(0.96);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, .6);
+    color: var(--gold);
+    font-family: "Uncial Antiqua", "Cinzel", serif;
+    -webkit-font-smoothing: antialiased;
+    transition: transform .6s var(--ease-1), opacity .6s var(--ease-1);
+}
+
+/* active state when JS toggles a class to begin */
+.title.play span {
+    opacity: 1;
+    transform: translateY(0) rotate(0) scale(1);
+    transition: transform 650ms var(--ease-1), opacity 650ms var(--ease-1);
+    text-shadow:
+        0 1px 0 rgba(255, 240, 200, .12),
+        0 8px 24px rgba(0, 0, 0, .55);
+}
+
+/* hover micro interaction for the title */
+.title:hover span {
+    transform: translateY(-4px) rotate(-1deg) scale(1.02);
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, .45)) saturate(1.05);
+}
+
+/* Subtle sparkle on hover - pseudo element */
+.title::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: auto 0 -6% 0;
+    height: 8%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    transform: translateY(8px) skewX(-10deg);
+    opacity: 0;
+    transition: opacity .6s ease;
+}
+
+.title:hover::after {
+    opacity: 1
+}
+
+/* subtitle with shimmer */
+.subtitle-wrap {
+    position: relative;
+    overflow: visible
+}
+
+.subtitle {
+    font-family: "Cinzel", serif;
+    font-size: clamp(18px, 2.4vw, 36px);
+    margin-top: 0;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-image: linear-gradient(90deg, rgba(240, 230, 200, 1) 0%, rgba(200, 230, 255, 1) 40%, rgba(220, 185, 255, 1) 100%);
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .6));
+    transform-origin: center;
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+    transition: opacity .9s var(--ease-1), transform .9s var(--ease-1);
+}
+
+/* when title finished, reveal subtitle with shimmer animation */
+.title.play+.subtitle-wrap .subtitle,
+.title.play~.subtitle-wrap .subtitle {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: subShine 2.6s linear 0.2s forwards;
+}
+
+/* shimmer sliding gradient clipped to text */
+@keyframes subShine {
+    0% {
+        background-position: -200% 0
+    }
+
+    40% {
+        background-position: 50% 0
+    }
+
+    100% {
+        background-position: 200% 0
+    }
+}
+
+/* lightning SVG styling */
+.lightning {
+    position: absolute;
+    width: 10vw;
+    max-width: 120px;
+    height: 60vh;
+    left: 50%;
+    top: 12%;
+    transform: translateX(-50%);
+    z-index: 1;
+    pointer-events: none;
+    opacity: .95;
+    mix-blend-mode: screen;
+    filter: drop-shadow(0 24px 48px rgba(160, 220, 255, 0.08));
+}
+
+@media (max-width:700px) {
+    .lightning {
+        display: none
+    }
+}
+
+/* Start button */
+.start-btn {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    gap: .8rem;
+    align-items: center;
+    cursor: pointer;
+    transition: transform .28s var(--ease-1), box-shadow .28s var(--ease-1), background .28s var(--ease-1);
+    color: var(--white);
+    box-shadow: 0 8px 30px rgba(3, 8, 14, 0.6);
+    will-change: transform;
+}
+
+.start-btn:focus {
+    outline: 3px solid rgba(160, 220, 255, 0.12);
+    outline-offset: 4px
+}
+
+.start-btn:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 18px 42px rgba(3, 8, 14, 0.7)
+}
+
+.start-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--gold), #ff9f3b);
+    box-shadow: 0 6px 18px rgba(255, 170, 80, .15), 0 0 24px rgba(255, 200, 120, .07);
+    transform-origin: center
+}
+
+.start-text {
+    font-family: "Cinzel", serif;
+    font-weight: 700
+}
+
+/* animate pulse on the start text */
+.start-btn.play .start-dot {
+    animation: ping-dot 1.8s infinite
+}
+
+@keyframes ping-dot {
+    0% {
+        transform: scale(1)
+    }
+
+    50% {
+        transform: scale(1.45)
+    }
+
+    100% {
+        transform: scale(1)
+    }
+}
+
+/* overlay / screens */
+.overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(5, 8, 12, 0.45), rgba(0, 0, 0, 0.6));
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .45s ease
+}
+
+.overlay.visible {
+    opacity: 1;
+    pointer-events: auto
+}
+
+.screen {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    border-radius: 16px;
+    padding: 28px 30px;
+    width: min(720px, 92vw);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .7);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    color: #eaeef6
+}
+
+.ghost {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--white)
+}
+
+/* mini dev button hide on production via aria-hidden toggles */
+.mini-cta {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 50
+}
+
+.mini-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--white);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion:reduce) {
+
+    .title span,
+    .subtitle,
+    .start-btn {
+        transition: none !important;
+        animation: none !important
+    }
+
+    .particles {
+        display: none
+    }
+
+    .lightning {
+        display: none
+    }
+}

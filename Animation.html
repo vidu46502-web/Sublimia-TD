@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PGC Games — Logo Animation</title>
+  <!-- Bold impactful font -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1113;
+      /* deep charcoal */
+      --accent: #f6f6f6;
+      /* near-white for high contrast */
+      --muted: #9aa0a6;
+      --gold: #F6C85F;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial
+    }
+
+    body {
+      background: radial-gradient(1200px 600px at 50% 35%, rgba(255, 255, 255, 0.02), transparent 15%), var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: var(--accent);
+    }
+
+    .stage {
+      width: 1200px;
+      max-width: 94vw;
+      height: 680px;
+      max-height: 80vh;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    /* Main card that holds logo + text */
+    .card {
+      width: 820px;
+      height: 420px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border-radius: 26px;
+      padding: 44px;
+      display: flex;
+      gap: 44px;
+      align-items: center;
+      box-shadow: 0 30px 80px rgba(2, 3, 4, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      transform: translateY(6px);
+    }
+
+    /* Left: logo area */
+    .logo-wrap {
+      flex: 0 0 360px;
+      height: 320px;
+      display: grid;
+      place-items: center;
+      position: relative
+    }
+
+    /* Sketch frame */
+    .sketch-frame {
+      width: 320px;
+      height: 260px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.7));
+    }
+
+    /* Logo image */
+    #logo {
+      width: 240px;
+      height: auto;
+      display: block;
+      transform-origin: center center;
+      will-change: transform, filter, opacity;
+      opacity: 0;
+      filter: grayscale(.1) contrast(1.02);
+      border-radius: 6px;
+      backface-visibility: hidden;
+    }
+
+    /* Hand-drawn scribble overlay (SVG) */
+    .scribble {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(1.06);
+      pointer-events: none;
+      opacity: 0;
+      mix-blend-mode: screen;
+      filter: blur(.4px) saturate(1.05);
+    }
+
+    /* Right: text area */
+    .text-wrap {
+      flex: 1;
+      color: var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+      justify-content: center
+    }
+
+    /* SVG stroke text */
+    .mark {
+      width: 100%;
+      max-width: 420px;
+      height: 120px;
+      display: block;
+    }
+
+    /* Tagline/second line */
+    .sub {
+      font-size: 18px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-top: 6px
+    }
+
+    /* Particle canvas sits above the card */
+    canvas.particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none
+    }
+
+    /* final lock state */
+    .reveal .card {
+      box-shadow: 0 50px 120px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.02)
+    }
+
+    /* Text-draw classes */
+    .stroke {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .fill {
+      fill: var(--accent);
+      opacity: 0
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      #logo {
+        transition: none;
+        animation: none
+      }
+
+      .scribble {
+        display: none
+      }
+    }
+
+    /* Small responsive tweak */
+    @media (max-width:980px) {
+      .card {
+        flex-direction: column;
+        height: auto;
+        padding: 28px;
+        border-radius: 18px
+      }
+
+      .logo-wrap {
+        order: 2
+      }
+
+      .text-wrap {
+        order: 1
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage" role="img" aria-label="PGC Games logo animation">
+    <div class="card" id="card">
+      <div class="logo-wrap">
+        <div class="sketch-frame">
+          <!-- Logo image (place your logo.webp in same folder) -->
+          <img id="logo" src="logo.webp" alt="PGC Games logo" />
+
+          <!-- Simple hand-drawn scribble SVG that animates to feel like a drawn outline -->
+          <svg class="scribble" viewBox="0 0 400 320" width="340" height="280" preserveAspectRatio="xMidYMid meet">
+            <g stroke="rgba(246,200,95,0.95)" stroke-width="4" fill="none" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path id="scrib1"
+                d="M28 120 C 60 10, 340 -10, 372 110 C 360 240, 200 310, 40 250 C 10 200, 18 140, 28 120" opacity="0.9"
+                stroke-linecap="round" />
+              <path id="scrib2" d="M78 70 C 120 20, 280 0, 320 80" stroke-width="3" stroke-opacity="0.7" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="text-wrap">
+        <!-- SVG text so we can animate stroke->fill elegantly -->
+        <svg class="mark" viewBox="0 0 800 180" preserveAspectRatio="xMinYMid meet">
+          <!-- Large bold text drawn as vector text (browser renders it) -->
+          <defs>
+            <style>
+              .t {
+                font-size: 140px;
+                font-weight: 900;
+                font-family: Montserrat, Arial, sans-serif
+              }
+            </style>
+          </defs>
+          <text id="textStroke" x="0" y="115" class="t stroke">PGC Games</text>
+          <text id="textFill" x="0" y="115" class="t fill">PGC Games</text>
+        </svg>
+        <div class="sub">Hand‑crafted gameplay • Modern studios</div>
+      </div>
+
+    </div>
+
+    <!-- Particle layer -->
+    <canvas class="particles" id="particles"></canvas>
+  </div>
+
+  <script>
+    // --- Utilities ---
+    const easeOutBack = (t) => 1 + (--t) * t * (2.70158 * t + 1.70158);
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+
+    // DOM refs
+    const logo = document.getElementById('logo');
+    const scrib1 = document.getElementById('scrib1');
+    const scrib2 = document.getElementById('scrib2');
+    const textStroke = document.getElementById('textStroke');
+    const textFill = document.getElementById('textFill');
+    const stage = document.querySelector('.stage');
+    const card = document.getElementById('card');
+
+    // Prepare stroke-dashoffset animation on SVG text
+    function prepareTextStroke() {
+      // get total length approximation by measuring path created from text via getComputedTextLength (SVGTextElement).
+      try {
+        const len = textStroke.getComputedTextLength();
+        textStroke.style.strokeDasharray = len;
+        textStroke.style.strokeDashoffset = len;
+        textStroke.style.transition = 'stroke-dashoffset 1s ease-in-out';
+
+        // fill copy
+        textFill.style.transition = 'opacity 0.45s ease 0.85s';
+      } catch (e) {
+        // fallback: reveal via opacity
+        textStroke.style.opacity = 0;
+        textFill.style.opacity = 1;
+      }
+    }
+
+    // Prepare scribble path lengths
+    function prepareScribble() {
+      [scrib1, scrib2].forEach(p => {
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = len;
+        p.style.strokeDashoffset = len;
+        p.style.transition = 'stroke-dashoffset 0.9s ease, opacity 0.9s ease';
+      });
+    }
+
+    // particle engine (small glints)
+    function particlesSetup() {
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = stage.clientWidth;
+      let h = canvas.height = stage.clientHeight;
+      const particles = [];
+
+      function resize() {
+        w = canvas.width = stage.clientWidth;
+        h = canvas.height = stage.clientHeight;
+      }
+      window.addEventListener('resize', resize);
+
+      function spawn(x, y) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.9) * 1.2 - 0.3,
+          life: 60 + Math.floor(Math.random() * 40),
+          r: 1 + Math.random() * 3,
+          alpha: 1
+        });
+      }
+
+      function tick() {
+        ctx.clearRect(0, 0, w, h);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.life--;
+          p.alpha = Math.max(0, p.life / 100);
+          ctx.beginPath();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = 'rgba(246,200,95,0.95)';
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+        requestAnimationFrame(tick);
+      }
+      tick();
+      return { spawn };
+    }
+
+    // main timeline orchestration
+    async function animate() {
+      prepareTextStroke();
+      prepareScribble();
+      const parts = particlesSetup();
+
+      // step 1: subtle card lift
+      card.style.transform = 'translateY(-12px)';
+      card.style.transition = 'transform 650ms cubic-bezier(.2,.9,.25,1)';
+
+      // step 2: scribble draw across (feels like hand-drawn outline)
+      await delay(260);
+      scrib1.style.opacity = 1;
+      scrib1.style.strokeDashoffset = 0;
+      parts.spawn(stage.clientWidth * 0.46, stage.clientHeight * 0.27);
+
+      await delay(140);
+      scrib2.style.opacity = 1;
+      scrib2.style.strokeDashoffset = 0;
+      parts.spawn(stage.clientWidth * 0.6, stage.clientHeight * 0.16);
+
+      // step 3: logo pop-in with subtle rotation (gives dynamic block stacking feel)
+      await delay(420);
+      logo.style.opacity = 1;
+      // a little rubbery pop using keyframe-like JS
+      await popAnimate(logo, {
+        fromScale: 0.6, toScale: 1, fromRot: -12, toRot: 0, duration: 680
+      });
+
+      // spawn glitter
+      for (let i = 0; i < 14; i++) {
+        parts.spawn(stage.clientWidth * 0.52 + (Math.random() - 0.5) * 120, stage.clientHeight * 0.2 + (Math.random() - 0.5) * 80);
+      }
+
+      // slight wobble to feel "hand-drawn"
+      wobble(logo, 2400);
+
+      // step 4: draw text stroke then fill
+      await delay(220);
+      // draw stroke
+      textStroke.style.strokeDashoffset = 0;
+      await delay(1050);
+      // show fill
+      textFill.style.opacity = 1;
+
+      // final micro-swoosh of overlay
+      await delay(200);
+      microSwoosh();
+
+      // mark reveal complete
+      document.documentElement.classList.add('reveal');
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function popAnimate(el, { fromScale = 0.6, toScale = 1, fromRot = -10, toRot = 0, duration = 700 }) {
+      return new Promise(resolve => {
+        const start = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const e = easeOutBack(t);
+          const s = fromScale + (toScale - fromScale) * e;
+          const rot = fromRot + (toRot - fromRot) * e;
+          el.style.transform = `translateZ(0) rotate(${rot}deg) scale(${s})`;
+          if (t < 1) requestAnimationFrame(frame); else resolve();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    function wobble(el, duration = 1800) {
+      const start = performance.now();
+      const A = 1.5; // amplitude
+      function f(now) {
+        const t = (now - start) / duration;
+        if (t > 1) { el.style.transform = 'rotate(0deg) scale(1)'; return; }
+        // decreasing oscillation
+        const rot = A * Math.exp(-3 * t) * Math.sin(12 * Math.PI * t);
+        el.style.transform = `rotate(${rot}deg) scale(1)`;
+        requestAnimationFrame(f);
+      }
+      requestAnimationFrame(f);
+    }
+
+    function microSwoosh() {
+      // a brief golden sheen that sweeps across logo and text
+      const shine = document.createElement('div');
+      shine.style.position = 'absolute';
+      shine.style.left = '-20%';
+      shine.style.top = '30%';
+      shine.style.width = '30%';
+      shine.style.height = '40%';
+      shine.style.background = 'linear-gradient(90deg, rgba(246,200,95,0) 0%, rgba(246,200,95,0.55) 50%, rgba(246,200,95,0) 100%)';
+      shine.style.transform = 'skewX(-18deg)';
+      shine.style.pointerEvents = 'none';
+      shine.style.mixBlendMode = 'screen';
+      shine.style.opacity = '0.9';
+      document.querySelector('.stage').appendChild(shine);
+      // animate across
+      shine.animate([
+        { transform: 'translateX(-100%) skewX(-18deg)', opacity: 0 },
+        { transform: 'translateX(120%) skewX(-18deg)', opacity: 0.95 }
+      ], { duration: 750, easing: 'cubic-bezier(.2,.9,.25,1)' }).onfinish = () => { shine.remove(); };
+    }
+
+    // create a small hand-shake on load to hint energy
+    window.addEventListener('load', () => {
+      // ensure logo exists
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      // small starting transforms
+      logo.style.transform = 'scale(0.6) rotate(-12deg)';
+      requestAnimationFrame(() => {
+        animate().catch(console.error);
+      });
+    });
+
+    // Initialize sizes for scribbles when DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      prepareScribble();
+      prepareTextStroke();
+    });
+  </script>
+</body>
+
+</html>

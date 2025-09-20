@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestica Tower Defense</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        canvas {
+            background-color: #4a5568;
+            border-radius: 12px;
+            border: 2px solid #a0aec0;
+            display: block;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background-color: #2d3748;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        #game-container {
+            display: none;
+            /* Hidden by default */
+        }
+
+        #tower-selection,
+        #tower-shop {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .tower-button,
+        .shop-item,
+        .selection-btn {
+            background-color: #4a5568;
+            border: none;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            box-shadow: 0 4px #2d3748;
+            width: 150px;
+            text-align: center;
+        }
+
+        .tower-button:hover,
+        .shop-item:hover,
+        .selection-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px #2d3748;
+        }
+
+        .tower-button.selected,
+        .selection-btn.selected {
+            background-color: #38a169;
+            box-shadow: 0 4px #2f855a;
+        }
+
+        .shop-item.owned {
+            background-color: #63b3ed;
+            cursor: default;
+        }
+
+        .ui-panel {
+            background-color: #2d3748;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d3748;
+            border: 2px solid #a0aec0;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .message-box button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #38a169;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #upgrade-panel,
+        #investor-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d3748;
+            border: 2px solid #a0aec0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        #upgrade-panel button,
+        #investor-panel button {
+            background-color: #38a169;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #investor-panel .sell-btn {
+            background-color: #c53030;
+        }
+
+        #investor-panel .sell-btn:hover {
+            background-color: #9b2c2c;
+        }
+
+        #investor-panel button:hover {
+            background-color: #2f855a;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 2px solid #a0aec0;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h2,
+        .modal-content h3 {
+            font-weight: bold;
+            color: #63b3ed;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content hr {
+            border-color: #4a5568;
+            margin: 1rem 0;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Fishing Minigame Styles */
+        #fishing-minigame {
+            z-index: 3000;
+        }
+
+        #fishing-bar-container {
+            width: 100%;
+            background: #4a5568;
+            height: 30px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #catch-zone {
+            position: absolute;
+            background: rgba(56, 161, 105, 0.7);
+            height: 100%;
+            left: 40%;
+            width: 20%;
+        }
+
+        #fish-icon {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background-color: #63b3ed;
+            top: 5px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="setup-container" class="container">
+        <h1 class="text-3xl font-bold mb-4">Celestica</h1>
+
+        <div class="ui-panel w-full">
+            <h2 class="text-xl font-bold mb-2">Choose a Map</h2>
+            <div id="map-selection" class="flex justify-center gap-4">
+                <button class="selection-btn selected" data-map="classic">Classic</button>
+                <button class="selection-btn" data-map="crossroads">Crossroads</button>
+                <button class="selection-btn" data-map="loop">The Loop</button>
+            </div>
+        </div>
+
+        <div class="ui-panel w-full">
+            <h2 class="text-xl font-bold mb-2">Choose Difficulty</h2>
+            <div id="difficulty-selection" class="flex justify-center gap-4 flex-wrap">
+                <button class="selection-btn selected" data-difficulty="easy">Easy</button>
+                <button class="selection-btn" data-difficulty="medium">Medium</button>
+                <button class="selection-btn" data-difficulty="hard">Hard</button>
+                <button class="selection-btn" data-difficulty="nightmare">Nightmare</button>
+            </div>
+        </div>
+
+        <button id="start-game-btn"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors duration-200">Start
+            Game</button>
+    </div>
+
+
+    <div id="game-container" class="container">
+        <div class="ui-panel">
+            <h1 class="text-3xl font-bold mb-2">Celestica</h1>
+            <div class="grid grid-cols-2 gap-x-4 text-left mx-auto max-w-xs">
+                <div>Health: <span id="health">10</span></div>
+                <div>Money: $<span id="money">200</span></div>
+                <div>Gems: <span id="gems">50</span></div>
+                <div>Wave: <span id="wave">1</span> / <span id="total-waves"></span></div>
+                <div class="col-span-2 text-center">Wave Bonus: $<span id="wave-bonus">50</span></div>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+                <button id="start-wave-btn"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Start
+                    Next Wave</button>
+                <button id="changelog-btn"
+                    class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Changelog</button>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-panel mt-4">
+            <h2 class="text-xl font-bold mb-2">Unlocked Towers</h2>
+            <div id="tower-selection"></div>
+        </div>
+        <div class="ui-panel mt-4">
+            <h2 class="text-xl font-bold mb-2">Shop</h2>
+            <div id="tower-shop"></div>
+        </div>
+    </div>
+
+    <div id="changelog-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" id="close-changelog">&times;</button>
+            <h2 class="text-2xl mb-2">Celestica Game Changelog</h2>
+            <hr class="my-4">
+
+            <h3 class="text-xl">Version 1.5 - The Gilded Galaxy Update</h3>
+            <p class="mb-4">The economy has been massively expanded with two new interactive towers and a complete
+                overhaul of the shop packs!</p>
+            <ul class="list-disc list-inside space-y-2 mb-4">
+                <li>**Game Renamed:** The game is now officially called **Celestica**!</li>
+                <li>**New Tower - Fisher:** This tower triggers a fun fishing minigame before each wave, allowing you to
+                    earn extra cash based on your fishing skills!</li>
+                <li>**New Tower - Investor:** Place an Investor to unlock the stock market! Click on the tower to buy
+                    and sell shares in various companies. Stock prices change after each wave.</li>
+                <li>**Shop Rework:**
+                    <ul class="list-disc list-inside ml-4">
+                        <li>**Tower Pack Fixed:** Now correctly awards a random unowned combat tower.</li>
+                        <li>**Economy Pack Reworked:** This pack is now a gacha system! Test your luck to unlock the new
+                            economy towers or win a cash prize.</li>
+                        <li>**Direct Purchases:** The Soul Witherer and Cyborg towers can now be purchased directly from
+                            the shop.</li>
+                    </ul>
+                </li>
+            </ul>
+            <hr class="my-4">
+            <h3 class="text-xl">Version 1.4 - Economy Update</h3>
+            <p class="mb-4">Introduced the Farmer, Miner, and Smuggler, along with the Wave Bonus mechanic.</p>
+            <hr class="my-4">
+            <h3 class="text-xl">Previous Versions (1.1 - 1.3)</h3>
+            <p class="mb-4">Initial game balance, new maps and difficulties, Soul Witherer reworks, and the tower
+                upgrade system.</p>
+        </div>
+    </div>
+
+    <div id="fishing-minigame" class="modal">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl mb-2">Fishing Time!</h2>
+            <p>Click "Reel In!" when the fish is in the green zone!</p>
+            <p class="text-xl my-2">Time Left: <span id="fishing-timer">15</span>s</p>
+            <p class="text-xl mb-4">Fish Caught: <span id="fish-caught-counter">0</span></p>
+            <div id="fishing-bar-container">
+                <div id="catch-zone"></div>
+                <div id="fish-icon"></div>
+            </div>
+            <button id="reel-in-btn"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">Reel In!</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const setupContainer = document.getElementById('setup-container');
+            const gameContainer = document.getElementById('game-container');
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const startWaveBtn = document.getElementById('start-wave-btn');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const mapSelectionContainer = document.getElementById('map-selection');
+            const difficultySelectionContainer = document.getElementById('difficulty-selection');
+
+            const changelogBtn = document.getElementById('changelog-btn');
+            const changelogModal = document.getElementById('changelog-modal');
+            const closeChangelogBtn = document.getElementById('close-changelog');
+            const towerSelectionEl = document.getElementById('tower-selection');
+            const towerShopEl = document.getElementById('tower-shop');
+            const healthEl = document.getElementById('health');
+            const moneyEl = document.getElementById('money');
+            const gemsEl = document.getElementById('gems');
+            const waveEl = document.getElementById('wave');
+            const totalWavesEl = document.getElementById('total-waves');
+            const waveBonusEl = document.getElementById('wave-bonus');
+
+            canvas.width = 800;
+            canvas.height = 600;
+
+            let lastTime = 0, health, money, gems = 50, towers, enemies, projectiles, effects, waveBonus;
+            let selectedTower, selectedPlacedTower, placementIndicator;
+            let waveInProgress, currentWaveIndex, gameOver, enemiesSpawnedThisWave;
+            let path, waves, spawnInterval;
+            let animationFrameId;
+
+            // --- NEW --- Investor and Fisher state
+            let stocks = [];
+            let playerPortfolio = {};
+            let fishingGame = { active: false, fishPos: 0, fishSpeed: 3, fishDirection: 1, timer: 15, fishCaught: 0, animationFrameId: null };
+
+            let selectedMap = 'classic';
+            let selectedDifficulty = 'easy';
+
+            const maps = {
+                classic: { path: [[{ x: 0, y: 150 }, { x: 200, y: 150 }, { x: 200, y: 450 }, { x: 400, y: 450 }, { x: 400, y: 150 }, { x: 600, y: 150 }, { x: 600, y: 450 }, { x: 800, y: 450 }]] },
+                crossroads: { path: [[{ x: 0, y: 100 }, { x: 350, y: 100 }, { x: 350, y: 250 }, { x: 450, y: 250 }, { x: 450, y: 100 }, { x: 800, y: 100 }], [{ x: 0, y: 500 }, { x: 350, y: 500 }, { x: 350, y: 350 }, { x: 450, y: 350 }, { x: 450, y: 500 }, { x: 800, y: 500 }]] },
+                loop: { path: [[{ x: 0, y: 300 }, { x: 100, y: 300 }, { x: 100, y: 100 }, { x: 700, y: 100 }, { x: 700, y: 500 }, { x: 100, y: 500 }, { x: 100, y: 300 }, { x: 800, y: 300 }]] }
+            };
+
+            const difficultySettings = {
+                easy: { healthMultiplier: 1.0, startMoney: 200, startHealth: 20 },
+                medium: { healthMultiplier: 1.5, startMoney: 150, startHealth: 15 },
+                hard: { healthMultiplier: 2.5, startMoney: 100, startHealth: 10 },
+                nightmare: { healthMultiplier: 4.0, startMoney: 75, startHealth: 1 }
+            };
+
+            const allTowerData = [
+                { name: 'Gunner', cost: 75, damage: 15, range: 150, fireRate: 0.5, color: '#3182ce', type: 'combat', projectileType: 'default' },
+                { name: 'Bandit', cost: 250, damage: 15, closeRangeDamage: 50, range: 150, aoeRange: 40, fireRate: 0.7, color: '#76451a', type: 'combat', projectileType: 'hybrid' },
+                { name: 'Samurai', cost: 250, damage: 250, range: 120, aoeRange: 100, fireRate: 0.1, color: '#e53e3e', type: 'combat', projectileType: 'aoe_charge', chargeTime: 3000 },
+                { name: 'Sniper', cost: 300, damage: 50, range: 300, fireRate: 0.25, color: '#a0aec0', type: 'combat', projectileType: 'default' },
+                { name: 'Slasher', cost: 200, damage: 25, range: 50, fireRate: 1.2, color: '#ff4500', type: 'combat', projectileType: 'default' },
+                { name: 'Cryolator', cost: 350, damage: 5, range: 100, fireRate: 0.3, color: '#b2f5ea', type: 'combat', projectileType: 'cryo' },
+                { name: 'Cyborg', cost: 150, damage: 10, range: 120, fireRate: 0.8, color: '#00ffff', type: 'combat', projectileType: 'shock', aoeRange: 50 },
+                { name: 'Soul Witherer', cost: 100, damage: 5, range: 150, fireRate: 0.6, color: '#000000', type: 'combat', projectileType: 'wither', aoeRange: 60, witherFactor: 0.2, witherDuration: 5000 },
+                { name: 'Farmer', cost: 300, incomeRate: 5, color: '#f6e05e', type: 'economy' },
+                { name: 'Miner', cost: 400, bonusIncrease: 25, color: '#a0aec0', type: 'economy' },
+                { name: 'Smuggler', cost: 500, damage: 1, range: 120, fireRate: 2, color: '#718096', type: 'economy', projectileType: 'money_shot', moneyPerHit: 1 },
+                { name: 'Fisher', cost: 600, color: '#63b3ed', type: 'economy', maxPlaced: 1 },
+                { name: 'Investor', cost: 1000, color: '#38a169', type: 'economy', maxPlaced: 1 },
+            ];
+            let towersUnlocked = new Set(['Gunner']);
+
+            function generateWaves() {
+                const baseWaves = [
+                    { total: 10, rate: 0.7, type: { speed: 1, color: '#f6ad55', health: 20 } }, { total: 15, rate: 0.5, type: { speed: 1.2, color: '#ed8936', health: 25 } }, { total: 20, rate: 0.4, type: { speed: 1, color: '#f6ad55', health: 35 } }, { total: 25, rate: 0.5, type: { speed: 1.8, color: '#c05621', health: 20 } }, { total: 10, rate: 1.0, type: { speed: 0.8, color: '#9c4221', health: 150 } }, { total: 30, rate: 0.3, type: { speed: 1.2, color: '#ed8936', health: 40 } }, { total: 20, rate: 0.4, type: { speed: 2.0, color: '#c05621', health: 30 } }, { total: 15, rate: 0.8, type: { speed: 0.9, color: '#9c4221', health: 200 } }, { total: 40, rate: 0.3, type: { speed: 1.5, color: '#dd6b20', health: 50 } }, { total: 1, rate: 1.0, type: { speed: 0.7, color: '#652b19', health: 1000, size: 25 } }, { total: 50, rate: 0.2, type: { speed: 1.6, color: '#ed8936', health: 60 } }, { total: 30, rate: 0.3, type: { speed: 2.2, color: '#c05621', health: 45 } }, { total: 25, rate: 0.7, type: { speed: 1.0, color: '#9c4221', health: 300 } }, { total: 60, rate: 0.2, type: { speed: 1.8, color: '#dd6b20', health: 70 } }, { total: 2, rate: 2.0, type: { speed: 0.8, color: '#652b19', health: 1200, size: 25 } }, { total: 70, rate: 0.15, type: { speed: 2.0, color: '#ed8936', health: 80 } }, { total: 40, rate: 0.2, type: { speed: 2.5, color: '#c05621', health: 60 } }, { total: 30, rate: 0.6, type: { speed: 1.2, color: '#9c4221', health: 450 } }, { total: 80, rate: 0.1, type: { speed: 2.2, color: '#dd6b20', health: 90 } }, { total: 1, rate: 1.0, type: { speed: 0.6, color: '#431a0d', health: 5000, size: 35 } },
+                ];
+                const multiplier = difficultySettings[selectedDifficulty].healthMultiplier;
+                return baseWaves.map(wave => ({ totalEnemies: wave.total, spawnRate: wave.rate, enemyType: { ...wave.type, health: wave.type.health * multiplier } }));
+            }
+
+            function initStocks() {
+                stocks = [
+                    { name: 'Celesti-Corp (CLC)', price: 100, volatility: 0.1 },
+                    { name: 'Astro-Tech (AST)', price: 250, volatility: 0.25 },
+                    { name: 'Galactic-Goods (GLG)', price: 50, volatility: 0.05 },
+                ];
+                playerPortfolio = { 'Celesti-Corp (CLC)': 0, 'Astro-Tech (AST)': 0, 'Galactic-Goods (GLG)': 0 };
+            }
+
+            function initGame() {
+                health = difficultySettings[selectedDifficulty].startHealth; money = difficultySettings[selectedDifficulty].startMoney;
+                towers = []; enemies = []; projectiles = []; effects = []; selectedTower = null; selectedPlacedTower = null;
+                placementIndicator = { x: 0, y: 0, show: false, valid: false };
+                waveInProgress = false; currentWaveIndex = 0; gameOver = false; enemiesSpawnedThisWave = 0;
+                if (spawnInterval) clearInterval(spawnInterval); path = maps[selectedMap].path; waves = generateWaves();
+                initStocks(); updateWaveBonus();
+                healthEl.textContent = health; moneyEl.textContent = money; gemsEl.textContent = gems; waveEl.textContent = 1; totalWavesEl.textContent = waves.length;
+                startWaveBtn.disabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height); drawPath();
+                if (animationFrameId) cancelAnimationFrame(animationFrameId); animate(0);
+            }
+
+            function isNearPath(x, y) {
+                const minDistance = 50;
+                for (const singlePath of path) {
+                    for (let i = 0; i < singlePath.length - 1; i++) {
+                        const p1 = singlePath[i]; const p2 = singlePath[i + 1]; const dx = p2.x - p1.x; const dy = p2.y - p1.y; if (dx === 0 && dy === 0) continue;
+                        const pathLengthSq = dx * dx + dy * dy; let t = ((x - p1.x) * dx + (y - p1.y) * dy) / pathLengthSq;
+                        t = Math.max(0, Math.min(1, t)); const closestX = p1.x + t * dx; const closestY = p1.y + t * dy;
+                        if (Math.sqrt(Math.pow(closestX - x, 2) + Math.pow(closestY - y, 2)) < minDistance) return true;
+                    }
+                }
+                return false;
+            }
+
+            function isValidPlacement(x, y, towerData) {
+                if (isNearPath(x, y)) return false;
+                for (const tower of towers) { if (Math.sqrt(Math.pow(tower.x - x, 2) + Math.pow(tower.y - y, 2)) < 40) return false; }
+                if (towerData.maxPlaced) {
+                    const count = towers.filter(t => t.name === towerData.name).length;
+                    if (count >= towerData.maxPlaced) { showMessage(`You can only place ${towerData.maxPlaced} ${towerData.name}(s)!`, '#c53030'); return false; }
+                }
+                return true;
+            }
+
+            function drawPath() {
+                path.forEach(singlePath => {
+                    ctx.beginPath(); ctx.moveTo(singlePath[0].x, singlePath[0].y);
+                    for (let i = 1; i < singlePath.length; i++) ctx.lineTo(singlePath[i].x, singlePath[i].y);
+                    ctx.strokeStyle = '#2d3748'; ctx.lineWidth = 44; ctx.lineCap = 'round'; ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(singlePath[0].x, singlePath[0].y);
+                    for (let i = 1; i < singlePath.length; i++) ctx.lineTo(singlePath[i].x, singlePath[i].y);
+                    ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 40; ctx.lineCap = 'round'; ctx.stroke();
+                });
+            }
+
+            class Tower {
+                constructor(x, y, data) { Object.assign(this, { x, y, ...data, lastShot: 0, target: null, upgrades: 0 }); }
+                draw() {
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 20, 0, 2 * Math.PI); ctx.fillStyle = this.color;
+                    ctx.fill(); ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+                    if (selectedPlacedTower === this && this.range) {
+                        ctx.beginPath(); ctx.arc(this.x, this.y, this.range, 0, 2 * Math.PI);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.lineWidth = 1; ctx.stroke();
+                    }
+                    ctx.fillStyle = 'white'; ctx.font = '12px Inter'; ctx.textAlign = 'center'; ctx.fillText(this.name + ' Lv' + this.upgrades, this.x, this.y + 30);
+                }
+                findTarget() {
+                    this.target = null; let closestEnemy = null; let minDistance = Infinity;
+                    for (const enemy of enemies) {
+                        const distance = Math.sqrt(Math.pow(enemy.x - this.x, 2) + Math.pow(enemy.y - this.y, 2));
+                        if (distance < this.range && distance < minDistance) { minDistance = distance; closestEnemy = enemy; }
+                    }
+                    this.target = closestEnemy;
+                }
+                attack() {
+                    const now = Date.now();
+                    if (this.target && now - this.lastShot > (1000 / this.fireRate)) {
+                        if (this.projectileType === 'hybrid') {
+                            const distanceToTarget = Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2));
+                            if (distanceToTarget < 50) {
+                                for (const enemy of enemies) { if (Math.sqrt(Math.pow(this.x - enemy.x, 2) + Math.pow(this.y - enemy.y, 2)) < this.aoeRange) { enemy.takeDamage(this.closeRangeDamage); effects.push(new Effect(enemy.x, enemy.y, 'hit')); } }
+                                effects.push(new Effect(this.x, this.y, 'aoe', this.aoeRange, 'orange'));
+                            } else { projectiles.push(new Projectile(this.x, this.y, this.target, this.damage, 'default', 0, this)); }
+                        } else if (this.projectileType === 'aoe_charge') {
+                            if (now - this.lastShot > this.chargeTime) {
+                                for (const enemy of enemies) { if (Math.sqrt(Math.pow(this.x - enemy.x, 2) + Math.pow(this.y - enemy.y, 2)) < this.range) { enemy.takeDamage(this.damage); } }
+                                effects.push(new Effect(this.x, this.y, 'aoe_charge', this.range, 'rgba(255, 0, 0, 0.8)')); this.lastShot = now;
+                            }
+                        } else { projectiles.push(new Projectile(this.x, this.y, this.target, this.damage, this.projectileType, this.aoeRange, this)); }
+                        this.lastShot = now;
+                    }
+                }
+                update(deltaTime) {
+                    if (this.type === 'combat' || (this.type === 'economy' && this.projectileType)) {
+                        if (!this.target || this.target.health <= 0) this.findTarget();
+                        if (this.target) this.attack();
+                    } else if (this.type === 'economy' && this.name === 'Farmer') {
+                        if (waveInProgress) { money += (this.incomeRate * deltaTime / 1000); moneyEl.textContent = Math.floor(money); }
+                    }
+                }
+            }
+            class Enemy {
+                constructor(path, type) { Object.assign(this, { path, pathIndex: 0, x: path[0].x, y: path[0].y, ...type, baseSpeed: type.speed, maxHealth: type.health, size: type.size || 15, slowUntil: 0, witherUntil: 0, witherFactor: 0 }); }
+                draw() {
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI); ctx.fillStyle = this.color; ctx.fill();
+                    if (Date.now() < this.witherUntil) {
+                        ctx.beginPath(); ctx.arc(this.x, this.y, this.size + 2, 0, 2 * Math.PI); ctx.strokeStyle = 'black'; ctx.lineWidth = 4; ctx.stroke();
+                    }
+                    const healthPercentage = this.health / this.maxHealth;
+                    ctx.fillStyle = '#4a5568'; ctx.fillRect(this.x - 15, this.y - 25, 30, 5);
+                    ctx.fillStyle = healthPercentage > 0.5 ? '#38a169' : (healthPercentage > 0.25 ? '#ecc94b' : '#c53030');
+                    ctx.fillRect(this.x - 15, this.y - 25, 30 * healthPercentage, 5);
+                }
+                takeDamage(damage) {
+                    let damageMultiplier = 1;
+                    if (Date.now() < this.witherUntil) {
+                        const extraDamage = damage * this.witherFactor;
+                        effects.push(new Effect(this.x, this.y - this.size, 'damage_text', 0, '#c471f5', `-${Math.round(extraDamage)}`));
+                        damageMultiplier += this.witherFactor;
+                    }
+                    this.health -= damage * damageMultiplier;
+                    if (this.health <= 0) this.die();
+                }
+                die() { money += 10; moneyEl.textContent = Math.floor(money); enemies = enemies.filter(e => e !== this); }
+                update() {
+                    const now = Date.now();
+                    this.speed = (now < this.slowUntil) ? this.baseSpeed * 0.5 : this.baseSpeed;
+                    if (this.pathIndex + 1 < this.path.length) {
+                        const target = this.path[this.pathIndex + 1]; const dx = target.x - this.x; const dy = target.y - this.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < this.speed) { this.x = target.x; this.y = target.y; this.pathIndex++; }
+                        else { this.x += (dx / distance) * this.speed; this.y += (dy / distance) * this.speed; }
+                    } else { health--; healthEl.textContent = health; enemies = enemies.filter(e => e !== this); if (health <= 0) endGame('lose'); }
+                }
+            }
+            class Projectile {
+                constructor(x, y, target, damage, type = 'default', aoeRange = 0, parentTower) { Object.assign(this, { x, y, target, damage, type, aoeRange, parentTower, speed: 10, size: 5 }); }
+                draw() {
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.type === 'wither' ? 'rgba(0, 0, 0, 0.8)' : (this.type === 'money_shot' ? '#f6e05e' : 'yellow'); ctx.fill();
+                }
+                update() {
+                    if (this.target && this.target.health > 0) {
+                        const dx = this.target.x - this.x; const dy = this.target.y - this.y; const distance = Math.sqrt(dx * dx + dy * dy);
+                        this.x += (dx / distance) * this.speed; this.y += (dy / distance) * this.speed;
+                        if (distance < this.size + this.target.size) {
+                            this.target.takeDamage(this.damage);
+                            if (this.type === 'money_shot') { money += this.parentTower.moneyPerHit; moneyEl.textContent = Math.floor(money); }
+                            if (this.type === 'shock' || this.type === 'wither') {
+                                for (const enemy of enemies) {
+                                    if (Math.sqrt(Math.pow(enemy.x - this.target.x, 2) + Math.pow(enemy.y - this.target.y, 2)) < this.aoeRange) {
+                                        if (enemy !== this.target) enemy.takeDamage(this.damage);
+                                        if (this.type === 'wither') { enemy.witherUntil = Date.now() + this.parentTower.witherDuration; enemy.witherFactor = this.parentTower.witherFactor; }
+                                    }
+                                }
+                                effects.push(new Effect(this.target.x, this.target.y, 'aoe', this.aoeRange, this.type === 'wither' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(74, 144, 226, 0.8)'));
+                            } else if (this.type === 'cryo') { this.target.slowUntil = Date.now() + 2000; }
+                            projectiles = projectiles.filter(p => p !== this); effects.push(new Effect(this.target.x, this.target.y, 'hit'));
+                        }
+                    } else { projectiles = projectiles.filter(p => p !== this); }
+                }
+            }
+            class Effect {
+                constructor(x, y, type, radius = 0, color = 'white', text = '') { Object.assign(this, { x, y, type, radius, color, text, age: 0, lifetime: 50 }); }
+                draw() {
+                    this.age++; if (this.age > this.lifetime) { effects = effects.filter(e => e !== this); return; }
+                    const alpha = 1 - (this.age / this.lifetime);
+                    if (this.type === 'hit') { ctx.beginPath(); ctx.arc(this.x, this.y, 10 * (this.age / this.lifetime), 0, 2 * Math.PI); ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`; ctx.fill(); }
+                    else if (this.type === 'aoe' || this.type === 'aoe_charge') { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * (this.age / this.lifetime), 0, 2 * Math.PI); ctx.strokeStyle = this.color; ctx.lineWidth = 5; ctx.stroke(); }
+                    else if (this.type === 'damage_text') { this.y -= 0.5; ctx.font = 'bold 14px Inter'; ctx.fillStyle = `rgba(196, 113, 245, ${alpha})`; ctx.textAlign = 'center'; ctx.fillText(this.text, this.x, this.y); }
+                }
+            }
+
+            function spawnEnemy() {
+                if (enemiesSpawnedThisWave < waves[currentWaveIndex].totalEnemies) {
+                    const spawnPath = path[enemiesSpawnedThisWave % path.length];
+                    enemies.push(new Enemy(spawnPath, waves[currentWaveIndex].enemyType));
+                    enemiesSpawnedThisWave++;
+                } else { clearInterval(spawnInterval); }
+            }
+
+            function actuallyStartWave() {
+                waveInProgress = true; enemiesSpawnedThisWave = 0; startWaveBtn.disabled = true;
+                waveEl.textContent = currentWaveIndex + 1;
+                spawnInterval = setInterval(spawnEnemy, waves[currentWaveIndex].spawnRate * 1000);
+            }
+
+            function startWave() {
+                if (gameOver || waveInProgress) return;
+                const hasFisher = towers.some(t => t.name === 'Fisher');
+                if (hasFisher) {
+                    startFishingMinigame();
+                } else {
+                    actuallyStartWave();
+                }
+            }
+
+            function endGame(status) {
+                gameOver = true; if (spawnInterval) clearInterval(spawnInterval);
+                let message = status === 'win' ? 'You Win!' : 'Game Over!';
+                let color = status === 'win' ? '#38a169' : '#c53030';
+                showMessage(message, color, () => { gameContainer.style.display = 'none'; setupContainer.style.display = 'flex'; });
+            }
+
+            function showMessage(text, color, callback) {
+                const existingBox = document.querySelector('.message-box'); if (existingBox) existingBox.remove();
+                const messageBox = document.createElement('div'); messageBox.className = 'message-box';
+                messageBox.style.backgroundColor = color; messageBox.style.color = 'white';
+                messageBox.innerHTML = `<div class="p-4">${text}</div>${callback ? '<button id="msg-btn">Continue</button>' : ''}`;
+                document.body.appendChild(messageBox);
+                if (callback) { messageBox.querySelector('#msg-btn').addEventListener('click', () => { document.body.removeChild(messageBox); callback(); }); }
+                else { setTimeout(() => { if (document.body.contains(messageBox)) document.body.removeChild(messageBox); }, 2000); }
+            }
+
+            function showUpgradePanel(tower) {
+                const existingPanel = document.getElementById('upgrade-panel') || document.getElementById('investor-panel');
+                if (existingPanel) existingPanel.remove();
+
+                if (tower.name === 'Investor') {
+                    showInvestorPanel();
+                    return;
+                }
+
+                const panel = document.createElement('div'); panel.id = 'upgrade-panel'; panel.className = 'flex flex-col gap-2';
+                const upgradeCost = Math.floor(tower.cost * (tower.upgrades + 1) * 1.5);
+                panel.innerHTML = `<h3 class="text-lg font-bold">${tower.name} - Level ${tower.upgrades}</h3><p>Upgrade for $${upgradeCost}</p>
+                <button id="upgrade-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">Upgrade</button>
+                <button id="close-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Close</button>`;
+                document.body.appendChild(panel);
+                document.getElementById('upgrade-btn').addEventListener('click', () => {
+                    if (money >= upgradeCost) {
+                        money -= upgradeCost; moneyEl.textContent = Math.floor(money); tower.upgrades++;
+                        if (tower.damage) tower.damage *= 1.2; if (tower.fireRate) tower.fireRate *= 1.1;
+                        if (tower.incomeRate) tower.incomeRate *= 1.25; if (tower.bonusIncrease) tower.bonusIncrease *= 1.5;
+                        showMessage(`${tower.name} upgraded to Level ${tower.upgrades}!`, '#38a169');
+                        document.body.removeChild(panel); selectedPlacedTower = null; updateWaveBonus();
+                    } else { showMessage('Not enough money!', '#c53030'); }
+                });
+                document.getElementById('close-btn').addEventListener('click', () => { document.body.removeChild(panel); selectedPlacedTower = null; });
+            }
+
+            function updateWaveBonus() {
+                const baseBonus = 50;
+                const minerBonus = towers.filter(t => t.name === 'Miner').reduce((sum, miner) => sum + miner.bonusIncrease, 0);
+                waveBonus = baseBonus + minerBonus; waveBonusEl.textContent = Math.floor(waveBonus);
+            }
+
+            function updateStockPrices() {
+                stocks.forEach(stock => {
+                    const change = (Math.random() - 0.45) * stock.volatility;
+                    stock.price *= (1 + change);
+                    stock.price = Math.max(10, stock.price); // minimum price
+                });
+            }
+
+            function animate(timestamp) {
+                if (gameOver) return;
+                const deltaTime = timestamp - lastTime; lastTime = timestamp;
+                animationFrameId = requestAnimationFrame(animate);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height); drawPath();
+                towers.forEach(t => t.draw()); enemies.forEach(e => e.draw());
+                projectiles.forEach(p => p.draw()); effects.forEach(e => e.draw());
+
+                if (waveInProgress) {
+                    enemies.forEach(e => e.update()); towers.forEach(t => t.update(deltaTime)); projectiles.forEach(p => p.update());
+                    if (enemies.length === 0 && enemiesSpawnedThisWave === waves[currentWaveIndex].totalEnemies) {
+                        waveInProgress = false; money += waveBonus; moneyEl.textContent = Math.floor(money); gems += 10; gemsEl.textContent = gems;
+                        updateStockPrices();
+                        if (currentWaveIndex < waves.length - 1) {
+                            currentWaveIndex++; startWaveBtn.disabled = false;
+                            waveEl.textContent = currentWaveIndex + 1;
+                            showMessage(`Wave ${currentWaveIndex} Completed!`, '#38a169');
+                        } else { endGame('win'); }
+                    }
+                }
+                if (placementIndicator.show && selectedTower) {
+                    ctx.beginPath(); ctx.arc(placementIndicator.x, placementIndicator.y, 20, 0, 2 * Math.PI);
+                    ctx.fillStyle = placementIndicator.valid ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'; ctx.fill();
+                    if (selectedTower.range) { ctx.beginPath(); ctx.arc(placementIndicator.x, placementIndicator.y, selectedTower.range, 0, 2 * Math.PI); ctx.strokeStyle = `rgba(255, 255, 255, 0.3)`; ctx.lineWidth = 1; ctx.stroke(); }
+                }
+            }
+
+            // --- EVENT LISTENERS & UI ---
+            mapSelectionContainer.addEventListener('click', (e) => { if (e.target.classList.contains('selection-btn')) { selectedMap = e.target.dataset.map; document.querySelectorAll('#map-selection .selection-btn').forEach(btn => btn.classList.remove('selected')); e.target.classList.add('selected'); } });
+            difficultySelectionContainer.addEventListener('click', (e) => { if (e.target.classList.contains('selection-btn')) { selectedDifficulty = e.target.dataset.difficulty; document.querySelectorAll('#difficulty-selection .selection-btn').forEach(btn => btn.classList.remove('selected')); e.target.classList.add('selected'); } });
+            startGameBtn.addEventListener('click', () => { setupContainer.style.display = 'none'; gameContainer.style.display = 'flex'; initGame(); });
+            startWaveBtn.addEventListener('click', () => { if (!waveInProgress) startWave(); });
+            changelogBtn.addEventListener('click', () => changelogModal.classList.add('open'));
+            closeChangelogBtn.addEventListener('click', () => changelogModal.classList.remove('open'));
+            changelogModal.addEventListener('click', (e) => { if (e.target.id === 'changelog-modal') changelogModal.classList.remove('open'); });
+            canvas.addEventListener('mousemove', (e) => { if (selectedTower) { const rect = canvas.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; placementIndicator.x = x; placementIndicator.y = y; placementIndicator.show = true; placementIndicator.valid = isValidPlacement(x, y, selectedTower); } });
+            canvas.addEventListener('mouseleave', () => { placementIndicator.show = false; });
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                if (selectedTower) {
+                    if (isValidPlacement(x, y, selectedTower) && money >= selectedTower.cost) {
+                        towers.push(new Tower(x, y, selectedTower)); money -= selectedTower.cost; moneyEl.textContent = Math.floor(money);
+                        selectedTower = null; placementIndicator.show = false; document.querySelectorAll('.tower-button').forEach(btn => btn.classList.remove('selected'));
+                        if (towers[towers.length - 1].name === 'Miner') updateWaveBonus();
+                    }
+                } else {
+                    selectedPlacedTower = null;
+                    for (const tower of towers) { if (Math.sqrt(Math.pow(tower.x - x, 2) + Math.pow(tower.y - y, 2)) < 20) { selectedPlacedTower = tower; showUpgradePanel(selectedPlacedTower); break; } }
+                    if (!selectedPlacedTower) { const existingPanel = document.getElementById('upgrade-panel') || document.getElementById('investor-panel'); if (existingPanel) existingPanel.remove(); }
+                }
+            });
+
+            // --- NEW/REWORKED UI FUNCTIONS ---
+            function showInvestorPanel() {
+                const panel = document.createElement('div'); panel.id = 'investor-panel';
+                let tableRows = stocks.map(stock => `
+                <tr class="border-b border-gray-600">
+                    <td class="p-2">${stock.name}</td>
+                    <td class="p-2">$${stock.price.toFixed(2)}</td>
+                    <td class="p-2">${playerPortfolio[stock.name]}</td>
+                    <td class="p-2">
+                        <button class="buy-btn" data-stock-name="${stock.name}">Buy</button>
+                        <button class="sell-btn" data-stock-name="${stock.name}">Sell</button>
+                    </td>
+                </tr>`).join('');
+                panel.innerHTML = `
+                <h3 class="text-xl font-bold mb-4 text-center">Stock Market</h3>
+                <p class="text-center mb-4">Your Cash: $${Math.floor(money)}</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead><tr class="border-b-2 border-gray-500">
+                            <th class="p-2">Stock</th><th class="p-2">Price</th><th class="p-2">Owned</th><th class="p-2">Actions</th>
+                        </tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+                <button id="close-investor-btn" class="bg-red-500 hover:bg-red-700 w-full mt-4">Close</button>`;
+                document.body.appendChild(panel);
+                panel.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('buy-btn')) {
+                        const stockName = e.target.dataset.stockName; const stock = stocks.find(s => s.name === stockName);
+                        if (money >= stock.price) { money -= stock.price; playerPortfolio[stockName]++; showInvestorPanel(); }
+                        else { showMessage('Not enough money!', '#c53030'); }
+                    } else if (e.target.classList.contains('sell-btn')) {
+                        const stockName = e.target.dataset.stockName; const stock = stocks.find(s => s.name === stockName);
+                        if (playerPortfolio[stockName] > 0) { money += stock.price; playerPortfolio[stockName]--; showInvestorPanel(); }
+                    } else if (e.target.id === 'close-investor-btn') {
+                        document.body.removeChild(panel); selectedPlacedTower = null;
+                    }
+                    moneyEl.textContent = Math.floor(money);
+                });
+            }
+
+            function startFishingMinigame() {
+                const modal = document.getElementById('fishing-minigame');
+                const timerEl = document.getElementById('fishing-timer');
+                const caughtEl = document.getElementById('fish-caught-counter');
+                const fishIcon = document.getElementById('fish-icon');
+                const reelBtn = document.getElementById('reel-in-btn');
+
+                fishingGame = { active: true, fishPos: 0, fishSpeed: (Math.random() * 4) + 3, fishDirection: 1, timer: 15, fishCaught: 0 };
+                timerEl.textContent = fishingGame.timer; caughtEl.textContent = fishingGame.fishCaught;
+                modal.classList.add('open');
+
+                const timerInterval = setInterval(() => {
+                    fishingGame.timer--; timerEl.textContent = fishingGame.timer;
+                    if (fishingGame.timer <= 0) {
+                        clearInterval(timerInterval);
+                        endFishingMinigame();
+                    }
+                }, 1000);
+
+                function animateFish() {
+                    if (!fishingGame.active) return;
+                    fishingGame.fishPos += fishingGame.fishSpeed * fishingGame.fishDirection;
+                    if (fishingGame.fishPos > 90 || fishingGame.fishPos < 0) { fishingGame.fishDirection *= -1; }
+                    fishIcon.style.left = `${fishingGame.fishPos}%`;
+                    fishingGame.animationFrameId = requestAnimationFrame(animateFish);
+                }
+                animateFish();
+
+                reelBtn.onclick = () => {
+                    if (fishingGame.fishPos >= 40 && fishingGame.fishPos <= 60) {
+                        fishingGame.fishCaught++; caughtEl.textContent = fishingGame.fishCaught;
+                        fishingGame.fishSpeed = (Math.random() * 4) + 3; // Change speed after catch
+                    }
+                };
+            }
+
+            function endFishingMinigame() {
+                const modal = document.getElementById('fishing-minigame');
+                fishingGame.active = false;
+                cancelAnimationFrame(fishingGame.animationFrameId);
+                modal.classList.remove('open');
+                const fishValue = 50;
+                const earnings = fishingGame.fishCaught * fishValue;
+                money += earnings; moneyEl.textContent = Math.floor(money);
+                showMessage(`You caught ${fishingGame.fishCaught} fish and earned $${earnings}!`, '#63b3ed');
+                actuallyStartWave();
+            }
+
+            function createShopAndButtons() {
+                towerShopEl.innerHTML = '';
+                // Tower Pack
+                const combatTowers = allTowerData.filter(t => t.type === 'combat' && t.name !== 'Gunner').map(t => t.name);
+                const unownedCombat = combatTowers.filter(t => !towersUnlocked.has(t));
+                if (unownedCombat.length > 0) {
+                    const packCost = 50;
+                    const packButton = document.createElement('button'); packButton.className = 'shop-item';
+                    packButton.innerHTML = `<div class="font-bold text-lg">Tower Pack</div><div class="text-sm">Cost: ${packCost} Gems</div>`;
+                    packButton.addEventListener('click', () => {
+                        if (gems >= packCost) {
+                            gems -= packCost; gemsEl.textContent = gems;
+                            const randomTower = unownedCombat[Math.floor(Math.random() * unownedCombat.length)];
+                            towersUnlocked.add(randomTower);
+                            showMessage(`Unlocked: ${randomTower}`, '#38a169');
+                            createShopAndButtons(); createSelectionButtons();
+                        } else { showMessage('Not enough gems!', '#c53030'); }
+                    });
+                    towerShopEl.appendChild(packButton);
+                }
+
+                // Economy Pack
+                const economyTowers = ['Farmer', 'Miner', 'Smuggler', 'Fisher', 'Investor'];
+                const unownedEconomy = economyTowers.filter(t => !towersUnlocked.has(t));
+                if (unownedEconomy.length > 0) {
+                    const economyPackCost = 60;
+                    const economyPackButton = document.createElement('button'); economyPackButton.className = 'shop-item relative';
+                    economyPackButton.innerHTML = `<div class="font-bold text-lg">Economy Pack</div><div class="text-sm">Cost: ${economyPackCost} Gems</div>
+                <div class="absolute top-1 right-1 bg-gray-600 rounded-full w-6 h-6 flex items-center justify-center cursor-pointer hover:bg-gray-500" id="eco-odds-info">?</div>`;
+                    economyPackButton.addEventListener('click', (e) => {
+                        if (e.target.id === 'eco-odds-info') return;
+                        if (gems >= economyPackCost) {
+                            gems -= economyPackCost; gemsEl.textContent = gems;
+                            const roll = Math.random();
+                            let awarded = false;
+                            const chances = [{ name: 'Investor', chance: 0.01 }, { name: 'Fisher', chance: 0.04 }, { name: 'Smuggler', chance: 0.1 }, { name: 'Farmer', chance: 0.1 }, { name: 'Miner', chance: 0.25 }];
+                            let cumulativeChance = 0;
+                            for (const tower of chances) {
+                                cumulativeChance += tower.chance;
+                                if (roll < cumulativeChance && unownedEconomy.includes(tower.name)) {
+                                    towersUnlocked.add(tower.name); showMessage(`Unlocked: ${tower.name}!`, '#38a169');
+                                    awarded = true; break;
+                                }
+                            }
+                            if (!awarded) {
+                                const moneyBonus = Math.floor(Math.random() * 101) + 150; money += moneyBonus; moneyEl.textContent = Math.floor(money);
+                                showMessage(`Received: $${moneyBonus} coins`, '#4299e1');
+                            }
+                            createShopAndButtons(); createSelectionButtons();
+                        } else { showMessage('Not enough gems!', '#c53030'); }
+                    });
+                    towerShopEl.appendChild(economyPackButton);
+                    document.getElementById('eco-odds-info').addEventListener('click', () => {
+                        showMessage(`<div class="text-left text-sm"><p class="font-bold text-base">Economy Pack Odds:</p><p>50% - Coins ($150-$250)</p><p>25% - Miner</p><p>10% - Farmer</p><p>10% - Smuggler</p><p>4% - Fisher</p><p>1% - Investor</p><hr class="my-1 border-gray-600"><p>Note: You will receive coins if you roll a tower you already own.</p></div>`, '#4a5568');
+                    });
+                }
+
+                // Individual unlockable towers
+                ['Cyborg', 'Soul Witherer'].forEach(towerName => {
+                    if (!towersUnlocked.has(towerName)) {
+                        const towerData = allTowerData.find(t => t.name === towerName);
+                        const cost = towerName === 'Cyborg' ? 20 : 30;
+                        const button = document.createElement('button'); button.className = 'shop-item';
+                        button.innerHTML = `<div class="font-bold text-lg">Buy ${towerData.name}</div><div class="text-sm">Cost: ${cost} Gems</div>`;
+                        button.addEventListener('click', () => {
+                            if (gems >= cost) {
+                                gems -= cost; gemsEl.textContent = gems; towersUnlocked.add(towerData.name);
+                                showMessage(`Unlocked: ${towerData.name}`, '#38a169');
+                                createShopAndButtons(); createSelectionButtons();
+                            } else { showMessage('Not enough gems!', '#c53030'); }
+                        });
+                        towerShopEl.appendChild(button);
+                    }
+                });
+            }
+            function createSelectionButtons() {
+                towerSelectionEl.innerHTML = '';
+                allTowerData.filter(t => towersUnlocked.has(t.name)).forEach(tower => {
+                    const button = document.createElement('button'); button.className = 'tower-button';
+                    button.innerHTML = `<div class="font-bold text-lg">${tower.name}</div><div class="text-sm">Cost: $${tower.cost}</div>`;
+                    button.addEventListener('click', () => { selectedTower = tower; placementIndicator.show = true; document.querySelectorAll('.tower-button').forEach(btn => btn.classList.remove('selected')); button.classList.add('selected'); });
+                    towerSelectionEl.appendChild(button);
+                });
+            }
+
+            createShopAndButtons();
+            createSelectionButtons();
+        });
+    </script>
+
+</body>
+
+</html>
